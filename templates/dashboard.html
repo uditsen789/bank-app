@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Dashboard</title>
+</head>
+
+<body style="font-family:Arial; text-align:center; background:#f5f5f5;">
+
+<h1 style="color:green;">Welcome {{user}}</h1>
+
+<div style="background:white; padding:20px; margin:20px; border-radius:10px;">
+    <h2>💰 Balance</h2>
+    <h1 style="color:blue;">₹{{balance}}</h1>
+</div>
+
+<div style="background:white; padding:20px; margin:20px; border-radius:10px;">
+
+<h3>Deposit Money</h3>
+<form action="/deposit" method="post">
+    <input type="hidden" name="user" value="{{user}}">
+    <input name="amount" placeholder="Amount">
+    <button style="background:green; color:white;">Deposit</button>
+</form>
+
+<br>
+
+<h3>Withdraw Money</h3>
+<form action="/withdraw" method="post">
+    <input type="hidden" name="user" value="{{user}}">
+    <input name="amount" placeholder="Amount">
+    <button style="background:red; color:white;">Withdraw</button>
+</form>
+
+</div>
+
+</body>
+</html>
