@@ -78,6 +78,7 @@ def withdraw():
     if bal >= amt:
         cursor.execute("UPDATE users SET balance = balance - ? WHERE username=?", (amt, u))
         conn.commit()
+        
 
     return redirect("/dashboard?user=" + u)
 
