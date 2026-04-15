@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Admin Panel</title>
+</head>
+
+<body>
+
+<h1>All Customers</h1>
+
+{% for d in data %}
+<p>{{d[0]}} | {{d[1]}} | ₹{{d[2]}}</p>
+{% endfor %}
+
+<br>
+<a href="/admin_logout">Logout</a>
+
+</body>
+</html>
