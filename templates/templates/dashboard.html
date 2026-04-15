@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Dashboard</title>
+
+<style>
+body {
+    font-family: Arial;
+    background: #f4f6f9;
+}
+
+.container {
+    width: 80%;
+    margin: auto;
+}
+
+.card {
+    background: white;
+    padding: 20px;
+    margin: 15px 0;
+    border-radius: 10px;
+    box-shadow: 0px 0px 10px #ccc;
+}
+
+button {
+    background: blue;
+    color: white;
+    padding: 8px 15px;
+    border: none;
+    border-radius: 5px;
+}
+
+input {
+    padding: 8px;
+    margin: 5px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th, td {
+    padding: 10px;
+    border-bottom: 1px solid #ddd;
+}
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+<h2>Welcome {{data[0]}}</h2>
+
+<div class="card">
+<p><b>Account No:</b> {{data[3]}}</p>
+<p><b>Balance:</b> ₹{{data[4]}}</p>
+</div>
+
+<!-- Deposit -->
+<div class="card">
+<h3>Deposit</h3>
+<form action="/deposit" method="POST">
+<input type="hidden" name="user" value="{{user}}">
+<input type="number" name="amount" placeholder="Amount" required>
+<button>Deposit</button>
+</form>
+</div>
+
+<!-- Withdraw -->
+<div class="card">
+<h3>Withdraw</h3>
+<form action="/withdraw" method="POST">
+<input type="hidden" name="user" value="{{user}}">
+<input type="number" name="amount" placeholder="Amount" required>
+<button>Withdraw</button>
+</form>
+</div>
+
+<!-- Transfer -->
+<div class="card">
+<h3>Transfer Money</h3>
+<form action="/transfer" method="POST">
+<input type="hidden" name="user" value="{{user}}">
+<input type="text" name="account" placeholder="Receiver Account No" required>
+<input type="number" name="amount" placeholder="Amount" required>
+<button>Send</button>
+</form>
+</div>
+
+<!-- Transaction History -->
+<div class="card">
+<h3>Transaction History</h3>
+
+<table>
+<tr>
+<th>Type</th>
+<th>Amount</th>
+<th>Account</th>
+<th>Time</th>
+</tr>
+
+{% for t in transactions %}
+<tr>
+<td>{{t[0]}}</td>
+<td>₹{{t[1]}}</td>
+<td>{{t[2]}}</td>
+<td>{{t[3]}}</td>
+</tr>
+{% endfor %}
+
+</table>
+
+</div>
+
+<a href="/logout"><button>Logout</button></a>
+
+</div>
+
+</body>
+</html>
