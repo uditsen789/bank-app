@@ -40,7 +40,6 @@ def init_db():
 
 init_db()
 
-# -------- DB CONNECT --------
 conn = sqlite3.connect("bank.db", check_same_thread=False)
 cursor = conn.cursor()
 
@@ -51,24 +50,28 @@ def generate_account():
 def current_time():
     return datetime.now().strftime("%d-%m-%Y %I:%M %p")
 
+# 🔥 SAFE OTP FUNCTION
 def send_otp(receiver_email, otp):
     try:
-        server = smtplib.SMTP("smtp.gmail.com", 587)
+        server = smtplib.SMTP("smtp.gmail.com", 587, timeout=10)
         server.starttls()
         server.login(EMAIL, PASSWORD)
-        message = f"Subject: OTP\n\nYour OTP is {otp}"
-        server.sendmail(EMAIL, receiver_email, message)
-        server.quit()
-        print("OTP:", otp)
-    except Exception as e:
-        print("EMAIL ERROR:", e)
 
-# -------- HOME --------
+        message = f"Subject: OTP Verification\n\nYour OTP is {otp}"
+        server.sendmail(EMAIL, receiver_email, message)
+
+        server.quit()
+        print("OTP sent to email ✅")
+
+    except Exception as e:
+        print("EMAIL FAILED ❌")
+        print("OTP (use this):", otp)
+
+# -------- ROUTES --------
 @app.route("/")
 def home():
     return render_template("index.html")
 
-# -------- SIGNUP --------
 @app.route("/signup", methods=["POST"])
 def signup():
     email = request.form["username"].strip()
@@ -87,7 +90,6 @@ def signup():
 
     return render_template("verify.html")
 
-# -------- VERIFY --------
 @app.route("/verify", methods=["POST"])
 def verify():
     if request.form["otp"] == session.get("otp"):
@@ -109,7 +111,6 @@ def verify():
 
     return "Wrong OTP ❌"
 
-# -------- LOGIN --------
 @app.route("/login", methods=["POST"])
 def login():
     u = request.form["username"].strip()
@@ -121,7 +122,6 @@ def login():
 
     return "Login Failed ❌"
 
-# -------- DASHBOARD --------
 @app.route("/dashboard")
 def dashboard():
     u = request.args.get("user")
@@ -139,7 +139,6 @@ def dashboard():
 
     return render_template("dashboard.html", user=u, data=data, transactions=transactions)
 
-# -------- DEPOSIT --------
 @app.route("/deposit", methods=["POST"])
 def deposit():
     u = request.form["user"]
@@ -150,11 +149,8 @@ def deposit():
                    (u, "Deposit", amt, "Self", current_time()))
 
     conn.commit()
-    flash("Deposit Successful ✅")
-
     return redirect(f"/dashboard?user={u}")
 
-# -------- WITHDRAW --------
 @app.route("/withdraw", methods=["POST"])
 def withdraw():
     u = request.form["user"]
@@ -168,13 +164,9 @@ def withdraw():
         cursor.execute("INSERT INTO transactions VALUES (?, ?, ?, ?, ?)",
                        (u, "Withdraw", amt, "Self", current_time()))
         conn.commit()
-        flash("Withdraw Successful ✅")
-    else:
-        flash("Insufficient Balance ❌")
 
     return redirect(f"/dashboard?user={u}")
 
-# -------- TRANSFER --------
 @app.route("/transfer", methods=["POST"])
 def transfer():
     sender = request.form["user"]
@@ -187,31 +179,21 @@ def transfer():
     cursor.execute("SELECT * FROM users WHERE account_number=?", (acc,))
     receiver = cursor.fetchone()
 
-    if not receiver:
-        flash("Receiver not found ❌")
-        return redirect(f"/dashboard?user={sender}")
+    if receiver and bal >= amt:
+        cursor.execute("UPDATE users SET balance = balance - ? WHERE username=?", (amt, sender))
+        cursor.execute("UPDATE users SET balance = balance + ? WHERE account_number=?", (amt, acc))
 
-    if bal < amt:
-        flash("Insufficient Balance ❌")
-        return redirect(f"/dashboard?user={sender}")
+        cursor.execute("INSERT INTO transactions VALUES (?, ?, ?, ?, ?)",
+                       (sender, "Transfer", amt, acc, current_time()))
 
-    cursor.execute("UPDATE users SET balance = balance - ? WHERE username=?", (amt, sender))
-    cursor.execute("UPDATE users SET balance = balance + ? WHERE account_number=?", (amt, acc))
-
-    cursor.execute("INSERT INTO transactions VALUES (?, ?, ?, ?, ?)",
-                   (sender, "Transfer", amt, acc, current_time()))
-
-    conn.commit()
-    flash("Transfer Successful ✅")
+        conn.commit()
 
     return redirect(f"/dashboard?user={sender}")
 
-# -------- LOGOUT --------
 @app.route("/logout")
 def logout():
     return redirect("/")
 
-# -------- ADMIN --------
 @app.route("/admin", methods=["GET", "POST"])
 def admin():
     if request.method == "POST":
@@ -232,6 +214,5 @@ def admin_panel():
 
     return render_template("admin.html", data=data)
 
-# -------- RUN --------
 if __name__ == "__main__":
     app.run()
