@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, redirect, session, flash
-import sqlite3, random, smtplib, os
+import sqlite3, random, smtplib
 from datetime import datetime
 
 app = Flask(__name__)
@@ -50,7 +50,7 @@ def generate_account():
 def current_time():
     return datetime.now().strftime("%d-%m-%Y %I:%M %p")
 
-# 🔥 SAFE OTP FUNCTION
+# 🔥 OTP WITH FALLBACK
 def send_otp(receiver_email, otp):
     try:
         server = smtplib.SMTP("smtp.gmail.com", 587, timeout=10)
@@ -62,10 +62,12 @@ def send_otp(receiver_email, otp):
 
         server.quit()
         print("OTP sent to email ✅")
+        return True
 
     except Exception as e:
-        print("EMAIL FAILED ❌")
-        print("OTP (use this):", otp)
+        print("EMAIL FAILED ❌:", e)
+        print("OTP:", otp)
+        return False
 
 # -------- ROUTES --------
 @app.route("/")
@@ -86,7 +88,10 @@ def signup():
     otp = str(random.randint(1000, 9999))
     session["otp"] = otp
 
-    send_otp(email, otp)
+    sent = send_otp(email, otp)
+
+    if not sent:
+        flash(f"Email failed ❌ Use this OTP: {otp}")
 
     return render_template("verify.html")
 
@@ -193,26 +198,6 @@ def transfer():
 @app.route("/logout")
 def logout():
     return redirect("/")
-
-@app.route("/admin", methods=["GET", "POST"])
-def admin():
-    if request.method == "POST":
-        if request.form["username"] == "admin" and request.form["password"] == "1234":
-            session["admin"] = True
-            return redirect("/admin_panel")
-        return "Wrong admin ❌"
-
-    return render_template("admin_login.html")
-
-@app.route("/admin_panel")
-def admin_panel():
-    if not session.get("admin"):
-        return "Access denied ❌"
-
-    cursor.execute("SELECT name, account_number, balance FROM users")
-    data = cursor.fetchall()
-
-    return render_template("admin.html", data=data)
 
 if __name__ == "__main__":
     app.run()
