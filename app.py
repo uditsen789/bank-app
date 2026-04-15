@@ -10,9 +10,6 @@ PASSWORD = "jdeb scnz qrqy yucn"
 
 # -------- DB INIT --------
 def init_db():
-    @app.before_request
-    def before_request():
-    init_db()
     conn = sqlite3.connect("bank.db")
     cursor = conn.cursor()
 
